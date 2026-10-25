@@ -1,0 +1,14 @@
+# Compilation and build output
+target/
+*.wasm
+
+# Local grammar cache and download artifacts
+grammars/
+
+# Logs
+*.log
+
+# Editor and OS metadata
+.DS_Store
+Thumbs.db
+*.swp

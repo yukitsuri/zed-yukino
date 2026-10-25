@@ -1,0 +1,251 @@
+;; Keywords
+[
+  "fun"
+  "cfun"
+  "set"
+  "rewrite"
+  "static"
+  "class"
+  "struct"
+  "cstruct"
+  "interface"
+  "enum"
+  "type"
+  "get"
+  "define"
+  "public"
+  "locked"
+  "operator"
+  "externc"
+  "alias"
+  "as"
+  "is"
+  "extends"
+  "with"
+  "ref"
+] @keyword
+
+"init" @keyword
+
+;; Control Flow
+[
+  "if"
+  "elif"
+  "else"
+  "switch"
+  "while"
+  "for"
+  "in"
+  "loop"
+  "break"
+  "continue"
+  "return"
+  "recur"
+  "sus"
+  "catch"
+  "finally"
+  "defer"
+  "space"
+  "region"
+] @keyword.control
+
+;; Constants & Literals
+[
+  (true)
+  (false)
+] @boolean
+
+(null) @constant.builtin
+
+[
+  (this)
+  (super)
+] @variable.special
+
+;; Built-in Primitive Types
+(primitive_type) @type.builtin
+
+;; Declarations
+(function_declaration name: (identifier) @function)
+(cfun_declaration name: (identifier) @function)
+(method_declaration name: (identifier) @function.method)
+(method_signature name: (identifier) @function.method)
+(operator_declaration name: (operator_symbol) @function.method)
+(operator_symbol) @operator
+(type_parameters (identifier) @type)
+(class_heritage (identifier) @type)
+(alias_declaration name: (identifier) @type)
+(tuple_pattern (identifier) @variable)
+(sus_statement error: (identifier) @variable)
+(break_statement label: (identifier) @label)
+(continue_statement label: (identifier) @label)
+(loop_statement label: (identifier) @label)
+(for_statement label: (identifier) @label)
+(while_statement label: (identifier) @label)
+(scoped_identifier (identifier) @module)
+(macro_declaration name: (identifier) @function.macro)
+(class_declaration name: (identifier) @type)
+(struct_declaration name: (identifier) @type)
+(interface_declaration name: (identifier) @type)
+(enum_declaration name: (identifier) @type)
+(type_alias_declaration name: (identifier) @type)
+(enum_variant name: (identifier) @variant)
+(user_type (identifier) @type)
+(field_declaration name: (identifier) @property)
+(property_declaration name: (identifier) @property)
+(parameter name: (identifier) @variable.parameter)
+(variable_declaration name: (identifier) @variable)
+(for_statement item: (identifier) @variable)
+(for_statement index: (identifier) @variable)
+
+;; Imports
+"load" @keyword.control.import
+(relative_prefix) @punctuation.delimiter
+(import_path prefix: (identifier) @module)
+(import_segment (import_pattern (identifier) @module))
+(import_segment "!" @punctuation.delimiter)
+(import_pattern "*" @operator)
+
+;; Switch patterns and literals
+(switch_arm pattern: (identifier) @variable)
+(pattern_tuple (identifier) @variable)
+(variant_payload (identifier) @variable)
+(struct_pattern_field value: (identifier) @variable)
+(import_symbols_clause (import_pattern (identifier) @variable))
+(import_symbols_clause (identifier) @variable)
+(import_symbols_clause "as" @keyword)
+(variant_pattern enum: (identifier) @type)
+(variant_pattern variant: (identifier) @variant)
+(struct_pattern name: (identifier) @type)
+(struct_pattern_field name: (identifier) @property)
+(map_entry key: (identifier) @property)
+(struct_expression name: (identifier) @type)
+(struct_expression
+  name: (scoped_identifier
+    (identifier) @type .))
+(struct_field_initializer name: (identifier) @property)
+(named_argument name: (identifier) @variable.parameter)
+(named_argument "=" @operator)
+(macro_call_expression
+  macro: (scoped_identifier
+    (identifier) @function.macro .))
+(macro_call_expression "!" @operator)
+
+;; Lambdas & Closures
+(lambda_expression "fun" @keyword)
+(lambda_expression "=>" @operator)
+(arrow_function "=>" @operator)
+(arrow_function parameters: (parenthesized_expression (identifier) @variable.parameter))
+
+;; Expressions & Calls
+;; Field access placed before method calls for Zed precedence resolution.
+(field_expression field: (identifier) @property)
+
+(call_expression function: (identifier) @function.call)
+(call_expression
+  function: (scoped_identifier
+    (identifier) @function.call .))
+(call_expression function: (field_expression field: (identifier) @function.method))
+(macro_call_expression macro: (identifier) @function.macro)
+
+;; Comments
+(line_comment) @comment
+(block_comment) @comment
+
+;; Strings & Numbers
+(string) @string
+(char) @constant
+(integer) @number
+(float) @number
+(escape_sequence) @string.escape
+
+;; Attributes
+(module_attribute) @attribute
+(attribute) @attribute
+(attribute_item name: (identifier) @attribute)
+(attribute_item
+  name: (scoped_identifier
+    (identifier) @attribute))
+(attribute_item "!" @operator)
+(c_attribute_item name: (identifier) @attribute)
+(attribute_named_arg name: (identifier) @property)
+(attribute_named_arg "=" @operator)
+
+;; Operators and Punctuation
+[
+  "+"
+  "-"
+  "*"
+  "/"
+  "%"
+  "**"
+  "="
+  "+="
+  "-="
+  "*="
+  "**="
+  "/="
+  "%="
+  "&="
+  "|="
+  "^="
+  "<<="
+  ">>="
+  "=="
+  "!="
+  "<"
+  "<="
+  ">"
+  ">="
+  "&&"
+  "||"
+  "!"
+  "~"
+  "&"
+  "|"
+  "^"
+  "<<"
+  ">>"
+  "->"
+  "=>"
+  "::"
+  "?"
+  ".."
+  "..="
+  "?."
+  "..."
+  "[]"
+  "[]="
+] @operator
+
+[
+  "("
+  ")"
+  "["
+  "]"
+  "{"
+  "}"
+] @punctuation.bracket
+
+;; String interpolation with special punctuation braces.
+(interpolation
+  "${" @punctuation.special
+  (_) @embedded
+  "}" @punctuation.special) @embedded
+
+[
+  ","
+  ":"
+  ";"
+  "."
+] @punctuation.delimiter
+
+;; Attribute delimiters
+(module_attribute
+  ["#![" "!#["] @punctuation.bracket)
+(module_attribute
+  "]" @punctuation.bracket)
+(attribute
+  ["#[" "|"] @punctuation.bracket)
+(attribute
+  ["]" "|"] @punctuation.bracket)
