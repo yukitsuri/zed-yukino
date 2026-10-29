@@ -73,7 +73,12 @@
 (operator_declaration name: (operator_symbol) @function.method)
 (operator_symbol) @operator
 (type_parameters (identifier) @type)
-(class_heritage (identifier) @type)
+(type_parameters ["<" ">"] @punctuation.bracket)
+(class_heritage (user_type (identifier) @type))
+(class_heritage
+  (user_type
+    (scoped_identifier
+      (identifier) @type .)))
 (alias_declaration name: (identifier) @type)
 (tuple_pattern (identifier) @variable)
 (sus_statement error: (identifier) @variable)
@@ -82,7 +87,8 @@
 (loop_statement label: (identifier) @label)
 (for_statement label: (identifier) @label)
 (while_statement label: (identifier) @label)
-(scoped_identifier (identifier) @module)
+(scoped_identifier
+  (identifier) @module)
 (macro_declaration name: (identifier) @function.macro)
 (class_declaration name: (identifier) @type)
 (struct_declaration name: (identifier) @type)
@@ -91,7 +97,14 @@
 (type_alias_declaration name: (identifier) @type)
 (enum_variant name: (identifier) @variant)
 (user_type (identifier) @type)
-(field_declaration name: (identifier) @property)
+(user_type
+  (scoped_identifier
+    (identifier) @type .))
+(user_type ["<" ">"] @punctuation.bracket)
+(init_expression ["<" ">"] @punctuation.bracket)
+((user_type (identifier) @type.builtin)
+ (#any-of? @type.builtin "ptr" "map"))
+(field_declaration name: (identifier) @variable)
 (property_declaration name: (identifier) @property)
 (parameter name: (identifier) @variable.parameter)
 (variable_declaration name: (identifier) @variable)
@@ -123,12 +136,18 @@
 (struct_expression
   name: (scoped_identifier
     (identifier) @type .))
+(init_expression class: (identifier) @type)
+(init_expression
+  class: (scoped_identifier
+    (identifier) @type .))
 (struct_field_initializer name: (identifier) @property)
 (named_argument name: (identifier) @variable.parameter)
 (named_argument "=" @operator)
 (macro_call_expression
   macro: (scoped_identifier
     (identifier) @function.macro .))
+((macro_call_expression macro: (identifier) @function.builtin)
+ (#any-of? @function.builtin "file" "line" "col" "hostenv" "get_target" "get_yukic_version" "yukienv" "get_profileconfig" "get_features" "is_lib_connected" "include_str" "include_strings" "include_bytes" "compile_error" "cfg" "compile_print"))
 (macro_call_expression "!" @operator)
 
 ;; Lambdas & Closures
@@ -138,8 +157,12 @@
 (arrow_function parameters: (parenthesized_expression (identifier) @variable.parameter))
 
 ;; Expressions & Calls
+(ternary_expression
+  "?" @operator
+  ":" @operator)
+
 ;; Field access placed before method calls for Zed precedence resolution.
-(field_expression field: (identifier) @property)
+(field_expression field: (identifier) @variable)
 
 (call_expression function: (identifier) @function.call)
 (call_expression
@@ -155,8 +178,11 @@
 ;; Strings & Numbers
 (string) @string
 (char) @constant
-(integer) @number
-(float) @number
+[
+  (number)
+  (integer)
+  (float)
+] @number
 (escape_sequence) @string.escape
 
 ;; Attributes
@@ -210,6 +236,7 @@
   "=>"
   "::"
   "?"
+  "??"
   ".."
   "..="
   "?."

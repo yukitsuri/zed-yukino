@@ -16,6 +16,12 @@
 (enum_declaration
   name: (identifier) @name) @item
 
+(enum_variant
+  name: (identifier) @name) @item
+
+(field_declaration
+  name: (identifier) @name) @item
+
 (type_alias_declaration
   name: (identifier) @name) @item
 
@@ -35,4 +41,7 @@
   name: (operator_symbol) @name) @item
 
 (property_declaration
+  name: (identifier) @name) @item
+
+(variable_declaration
   name: (identifier) @name) @item

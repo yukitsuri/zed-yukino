@@ -527,17 +527,15 @@ console.log('  \' ... \'     :', bracketsContent.includes('"\'" @open "\'" @clos
 console.log('  """ ... """ :', (bracketsContent.includes('\"\"\"') || bracketsContent.includes('\\"\\"\\"')) ? '[OK]' : 'GAP (multiline strings not in brackets.scm)');
 
 console.log('\nIndents in indents.scm (@indent):');
-const indentNodes = [
-  'block', 'struct_body', 'struct_expression', 'lambda_expression',
-  'class_body', 'interface_body', 'enum_body', 'switch_body',
-  'externc_block', 'parameters', 'arguments',
-  'array_expression', 'map_expression', 'macro_brace_arguments', 'macro_bracket_arguments'
-];
+const hasBraceIndent = indentsContent.includes('"{"') && indentsContent.includes('"}" @end') && indentsContent.includes('@indent');
+const hasBracketIndent = indentsContent.includes('"["') && indentsContent.includes('"]" @end') && indentsContent.includes('@indent');
+const hasParenIndent = indentsContent.includes('"("') && indentsContent.includes('")" @end') && indentsContent.includes('@indent');
+const hasSwitchArm = indentsContent.includes('(switch_arm) @indent');
 
-for (const node of indentNodes) {
-  const present = indentsContent.includes(`(${node})`);
-  console.log(`  (${node})`.padEnd(30) + (present ? ': [OK]' : ': [GAP] Missing from @indent'));
-}
+console.log('  { ... } @end block/body/map/expr indent : ' + (hasBraceIndent ? '[OK]' : '[GAP]'));
+console.log('  [ ... ] @end array/bracket indent       : ' + (hasBracketIndent ? '[OK]' : '[GAP]'));
+console.log('  ( ... ) @end paren/arg indent           : ' + (hasParenIndent ? '[OK]' : '[GAP]'));
+console.log('  (switch_arm) @indent                    : ' + (hasSwitchArm ? '[OK]' : '[GAP]'));
 
 // 4. Audit Outline and Textobjects
 console.log('\n================ 4. OUTLINE AND TEXTOBJECTS AUDIT ================');
