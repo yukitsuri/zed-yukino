@@ -318,6 +318,36 @@ const scmFiles = fs.readdirSync(ZED_LANG_DIR)
 
 const queryAudit = auditQueries(scmFiles);
 
+// Audit captures against official Zed specification (40 supported captures)
+const zedOfficialCaptures = new Set([
+  'attribute', 'boolean', 'comment', 'comment.doc', 'constant', 'constant.builtin',
+  'constructor', 'embedded', 'emphasis', 'emphasis.strong', 'enum', 'function',
+  'hint', 'keyword', 'label', 'link_text', 'link_uri', 'number', 'operator',
+  'predictive', 'preproc', 'primary', 'property', 'punctuation', 'punctuation.bracket',
+  'punctuation.delimiter', 'punctuation.list_marker', 'punctuation.special', 'string',
+  'string.escape', 'string.regex', 'string.special', 'string.special.symbol', 'tag',
+  'tag.doctype', 'text.literal', 'title', 'type', 'type.builtin', 'variable',
+  'variable.special', 'variable.parameter', 'variant'
+]);
+
+const hlRaw = fs.readFileSync(path.join(ZED_LANG_DIR, 'highlights.scm'), 'utf8');
+const hlCaptureMatches = hlRaw.matchAll(/@([a-zA-Z0-9_.-]+)/g);
+const invalidHlCaptures = [];
+for (const m of hlCaptureMatches) {
+  const cap = m[1];
+  if (!cap.startsWith('_') && !zedOfficialCaptures.has(cap)) {
+    invalidHlCaptures.push(cap);
+  }
+}
+if (invalidHlCaptures.length > 0) {
+  queryAudit.errors.push({
+    file: 'highlights.scm',
+    line: 1,
+    col: 1,
+    msg: `Found ${invalidHlCaptures.length} captures not in official Zed specification: [${invalidHlCaptures.join(', ')}]`
+  });
+}
+
 console.log('================ 1. TREE-SITTER QUERY VALIDITY ================');
 console.log(`Audited ${scmFiles.length} files against ${namedNodes.size} named nodes & ${anonTokens.size} anonymous tokens.`);
 if (queryAudit.errors.length === 0) {
@@ -381,18 +411,18 @@ const featureChecks = [
   },
   {
     name: 'Macros: macro_declaration',
-    ok: hlContent.includes('(macro_declaration name: (identifier) @function.macro)'),
-    details: 'macro_declaration name as @function.macro'
+    ok: hlContent.includes('(macro_declaration name: (identifier) @preproc)'),
+    details: 'macro_declaration name as @preproc'
   },
   {
     name: 'Macros: macro_call_expression with identifier',
-    ok: hlContent.includes('(macro_call_expression macro: (identifier) @function.macro)'),
-    details: 'macro_call_expression macro as @function.macro'
+    ok: hlContent.includes('(macro_call_expression macro: (identifier) @preproc)'),
+    details: 'macro_call_expression macro as @preproc'
   },
   {
     name: 'Macros: macro_call_expression with scoped_identifier',
-    ok: hlContent.includes('macro: (scoped_identifier') && hlContent.includes('@function.macro'),
-    details: 'macro_call_expression macro scoped_identifier as @function.macro'
+    ok: hlContent.includes('macro: (scoped_identifier') && hlContent.includes('@preproc'),
+    details: 'macro_call_expression macro scoped_identifier as @preproc'
   },
   {
     name: 'Macros: macro_call_expression bang (!)',
@@ -401,8 +431,8 @@ const featureChecks = [
   },
   {
     name: 'Imports: load keyword',
-    ok: hlContent.includes('"load" @keyword.control.import'),
-    details: 'load as @keyword.control.import'
+    ok: hlContent.includes('"load" @keyword'),
+    details: 'load as @keyword'
   },
   {
     name: 'Imports: relative prefix (., .., ...)',
@@ -454,53 +484,53 @@ const featureChecks = [
   },
   {
     name: 'Interface: method_signature',
-    ok: hlContent.includes('method_signature'),
-    details: 'GAP: method_signature in interface_body is NOT highlighted as @function.method'
+    ok: hlContent.includes('(method_signature name: (identifier) @function)'),
+    details: 'method_signature name as @function'
   },
   {
     name: 'Operator declarations: operator_declaration & operator_symbol',
-    ok: hlContent.includes('operator_declaration') || hlContent.includes('operator_symbol'),
-    details: 'GAP: operator_declaration name: (operator_symbol) is NOT highlighted'
+    ok: hlContent.includes('(operator_declaration name: (operator_symbol) @operator)'),
+    details: 'operator_declaration name as @operator'
   },
   {
     name: 'Special types: pointer_type (ptr) & map_type (map)',
     ok: hlContent.includes('"ptr"') && hlContent.includes('"map"'),
-    details: 'GAP: ptr and map in pointer_type and map_type are NOT highlighted'
+    details: 'ptr and map in pointer_type and map_type highlighted as @type.builtin'
   },
   {
     name: 'Heritage: class_heritage extends/with types',
     ok: hlContent.includes('class_heritage'),
-    details: 'GAP: class_heritage base class and interface names are NOT highlighted as @type'
+    details: 'class_heritage base class and interface names as @type'
   },
   {
     name: 'Generics: type_parameters',
     ok: hlContent.includes('type_parameters'),
-    details: 'GAP: type parameter declarations <T> are NOT highlighted as @type'
+    details: 'type parameter declarations <T> as @type'
   },
   {
     name: 'Alias: alias_declaration name',
-    ok: /\(alias_declaration\b/.test(hlContent),
-    details: 'GAP: alias_declaration name is NOT highlighted as @type'
+    ok: hlContent.includes('(alias_declaration name: (identifier) @variable)'),
+    details: 'alias_declaration name as @variable'
   },
   {
     name: 'Catch: sus_statement error variable',
     ok: hlContent.includes('sus_statement') && hlContent.includes('error:'),
-    details: 'GAP: sus_statement error: (identifier) in catch is NOT highlighted as @variable'
+    details: 'sus_statement error: (identifier) in catch as @variable'
   },
   {
     name: 'Destructuring: tuple_pattern in variable_declaration',
     ok: hlContent.includes('tuple_pattern'),
-    details: 'GAP: tuple_pattern (a, b) in set (a, b) = pair is NOT highlighted as @variable'
+    details: 'tuple_pattern (a, b) in set (a, b) = pair as @variable'
   },
   {
     name: 'For loop: index variable',
     ok: hlContent.includes('for_statement') && hlContent.includes('index:'),
-    details: 'GAP: for_statement index: (identifier) is NOT highlighted as @variable'
+    details: 'for_statement index: (identifier) as @variable'
   },
   {
     name: 'Scoped identifier namespace prefix',
-    ok: hlContent.includes('(scoped_identifier\n  (identifier) @module)'),
-    details: 'GAP: Prefix namespace/module in scoped_identifier (e.g. std::io::println) is unhighlighted'
+    ok: hlContent.includes('(scoped_identifier\n  (identifier) @type)'),
+    details: 'Prefix namespace/module in scoped_identifier as @type'
   }
 ];
 

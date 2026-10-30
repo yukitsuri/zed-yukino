@@ -47,7 +47,7 @@
   "defer"
   "space"
   "region"
-] @keyword.control
+] @keyword
 
 ;; Constants & Literals
 [
@@ -68,9 +68,9 @@
 ;; Declarations
 (function_declaration name: (identifier) @function)
 (cfun_declaration name: (identifier) @function)
-(method_declaration name: (identifier) @function.method)
-(method_signature name: (identifier) @function.method)
-(operator_declaration name: (operator_symbol) @function.method)
+(method_declaration name: (identifier) @function)
+(method_signature name: (identifier) @function)
+(operator_declaration name: (operator_symbol) @operator)
 (operator_symbol) @operator
 (type_parameters (identifier) @type)
 (type_parameters ["<" ">"] @punctuation.bracket)
@@ -79,7 +79,8 @@
   (user_type
     (scoped_identifier
       (identifier) @type .)))
-(alias_declaration name: (identifier) @type)
+(alias_declaration name: (identifier) @variable)
+(alias_declaration "#" @punctuation.delimiter)
 (tuple_pattern (identifier) @variable)
 (sus_statement error: (identifier) @variable)
 (break_statement label: (identifier) @label)
@@ -88,8 +89,8 @@
 (for_statement label: (identifier) @label)
 (while_statement label: (identifier) @label)
 (scoped_identifier
-  (identifier) @module)
-(macro_declaration name: (identifier) @function.macro)
+  (identifier) @type)
+(macro_declaration name: (identifier) @preproc)
 (class_declaration name: (identifier) @type)
 (struct_declaration name: (identifier) @type)
 (interface_declaration name: (identifier) @type)
@@ -104,7 +105,8 @@
 (init_expression ["<" ">"] @punctuation.bracket)
 ((user_type (identifier) @type.builtin)
  (#any-of? @type.builtin "ptr" "map"))
-(field_declaration name: (identifier) @variable)
+(field_declaration name: (identifier) @property)
+(enum_variant_parameter name: (identifier) @variable.parameter)
 (property_declaration name: (identifier) @property)
 (parameter name: (identifier) @variable.parameter)
 (variable_declaration name: (identifier) @variable)
@@ -112,10 +114,10 @@
 (for_statement index: (identifier) @variable)
 
 ;; Imports
-"load" @keyword.control.import
+"load" @keyword
 (relative_prefix) @punctuation.delimiter
-(import_path prefix: (identifier) @module)
-(import_segment (import_pattern (identifier) @module))
+(import_path prefix: (identifier) @type)
+(import_segment (import_pattern (identifier) @type))
 (import_segment "!" @punctuation.delimiter)
 (import_pattern "*" @operator)
 
@@ -145,9 +147,9 @@
 (named_argument "=" @operator)
 (macro_call_expression
   macro: (scoped_identifier
-    (identifier) @function.macro .))
-((macro_call_expression macro: (identifier) @function.builtin)
- (#any-of? @function.builtin "file" "line" "col" "hostenv" "get_target" "get_yukic_version" "yukienv" "get_profileconfig" "get_features" "is_lib_connected" "include_str" "include_strings" "include_bytes" "compile_error" "cfg" "compile_print"))
+    (identifier) @preproc .))
+((macro_call_expression macro: (identifier) @preproc)
+ (#any-of? @preproc "file" "line" "col" "hostenv" "get_target" "get_yukic_version" "yukienv" "get_profileconfig" "get_features" "is_lib_connected" "include_str" "include_strings" "include_bytes" "compile_error" "cfg" "compile_print"))
 (macro_call_expression "!" @operator)
 
 ;; Lambdas & Closures
@@ -164,12 +166,12 @@
 ;; Field access placed before method calls for Zed precedence resolution.
 (field_expression field: (identifier) @variable)
 
-(call_expression function: (identifier) @function.call)
+(call_expression function: (identifier) @function)
 (call_expression
   function: (scoped_identifier
-    (identifier) @function.call .))
-(call_expression function: (field_expression field: (identifier) @function.method))
-(macro_call_expression macro: (identifier) @function.macro)
+    (identifier) @function .))
+(call_expression function: (field_expression field: (identifier) @function))
+(macro_call_expression macro: (identifier) @preproc)
 
 ;; Comments
 (line_comment) @comment
@@ -194,6 +196,7 @@
     (identifier) @attribute))
 (attribute_item "!" @operator)
 (c_attribute_item name: (identifier) @attribute)
+(c_attribute_item "=" @operator)
 (attribute_named_arg name: (identifier) @property)
 (attribute_named_arg "=" @operator)
 
