@@ -54,11 +54,6 @@
     (_)* @function.inside
     "}"))
 
-; parameters
-(parameter) @parameter.around
-(parameter
-  name: (identifier) @parameter.inside)
-
 ; classes, structs, interfaces, and enums
 (class_declaration
   body: (class_body
