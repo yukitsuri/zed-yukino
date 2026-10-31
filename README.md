@@ -1,6 +1,6 @@
 # zed-yukino
 
-Yukino language extension for the [Zed](https://zed.dev) editor.
+[Yukino](https://github.com/yukitsuri/yukino) language extension for the [Zed](https://zed.dev) editor.
 
 Provides syntax highlighting, bracket matching, indentation rules, outlines, and snippets for Yukino (`.ykn`). Uses [tree-sitter-yukino](https://github.com/yukitsuri/tree-sitter-yukino).
 
