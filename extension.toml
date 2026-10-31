@@ -2,7 +2,7 @@ id = "yukino"
 name = "Yukino"
 version = "0.0.1"
 schema_version = 1
-authors = ["Yukitsuri"]
+authors = ["Yukitsuri <shareui@proton.me>"]
 description = "Language support for the Yukino programming language."
 repository = "https://github.com/yukitsuri/zed-yukino"
 
