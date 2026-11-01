@@ -6,7 +6,7 @@ authors = ["Yukitsuri <shareui@proton.me>"]
 description = "Language support for the Yukino programming language."
 repository = "https://github.com/yukitsuri/zed-yukino"
 
-snippets = ["snippets/yukino.json"]
+snippets = ["snippets/yukino.json", "snippets/clarity.json"]
 
 [grammars.yukino]
 repository = "https://github.com/yukitsuri/tree-sitter-yukino"

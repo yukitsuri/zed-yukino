@@ -18,6 +18,7 @@ const NODE_TYPES_PATH = path.join(ROOT, 'prod/tree-sitter-yukino/src/node-types.
 const GRAMMAR_PATH = path.join(ROOT, 'prod/tree-sitter-yukino/src/grammar.json');
 const ZED_DIR = path.resolve(__dirname, '..');
 const ZED_LANG_DIR = path.join(ZED_DIR, 'languages/yukino');
+const ZED_CLARITY_DIR = path.join(ZED_DIR, 'languages/clarity');
 const VSCODE_TM_PATH = path.join(ROOT, 'prod/vscode-yukino/syntaxes/yukino.tmLanguage.json');
 
 // --- 1. Load schema ---
@@ -312,9 +313,10 @@ function auditQueries(files) {
 }
 
 // Execute queries audit
-const scmFiles = fs.readdirSync(ZED_LANG_DIR)
-  .filter(f => f.endsWith('.scm'))
-  .map(f => path.join(ZED_LANG_DIR, f));
+const scmFiles = [
+  ...fs.readdirSync(ZED_LANG_DIR).filter(f => f.endsWith('.scm')).map(f => path.join(ZED_LANG_DIR, f)),
+  ...fs.readdirSync(ZED_CLARITY_DIR).filter(f => f.endsWith('.scm')).map(f => path.join(ZED_CLARITY_DIR, f))
+];
 
 const queryAudit = auditQueries(scmFiles);
 
@@ -330,22 +332,25 @@ const zedOfficialCaptures = new Set([
   'variable.special', 'variable.parameter', 'variant'
 ]);
 
-const hlRaw = fs.readFileSync(path.join(ZED_LANG_DIR, 'highlights.scm'), 'utf8');
-const hlCaptureMatches = hlRaw.matchAll(/@([a-zA-Z0-9_.-]+)/g);
-const invalidHlCaptures = [];
-for (const m of hlCaptureMatches) {
-  const cap = m[1];
-  if (!cap.startsWith('_') && !zedOfficialCaptures.has(cap)) {
-    invalidHlCaptures.push(cap);
+for (const dir of [ZED_LANG_DIR, ZED_CLARITY_DIR]) {
+  const hlFile = path.join(dir, 'highlights.scm');
+  if (!fs.existsSync(hlFile)) continue;
+  const hlRaw = fs.readFileSync(hlFile, 'utf8');
+  const invalidHlCaptures = [];
+  for (const m of hlRaw.matchAll(/@([a-zA-Z0-9_.-]+)/g)) {
+    const cap = m[1];
+    if (!cap.startsWith('_') && !zedOfficialCaptures.has(cap)) {
+      invalidHlCaptures.push(cap);
+    }
   }
-}
-if (invalidHlCaptures.length > 0) {
-  queryAudit.errors.push({
-    file: 'highlights.scm',
-    line: 1,
-    col: 1,
-    msg: `Found ${invalidHlCaptures.length} captures not in official Zed specification: [${invalidHlCaptures.join(', ')}]`
-  });
+  if (invalidHlCaptures.length > 0) {
+    queryAudit.errors.push({
+      file: path.relative(ZED_DIR, hlFile),
+      line: 1,
+      col: 1,
+      msg: `Found ${invalidHlCaptures.length} captures not in official Zed specification: [${invalidHlCaptures.join(', ')}]`
+    });
+  }
 }
 
 console.log('================ 1. TREE-SITTER QUERY VALIDITY ================');
@@ -539,13 +544,86 @@ for (const check of featureChecks) {
   console.log(`${status} ${check.name.padEnd(45)} -> ${check.details}`);
 }
 
+console.log('\n--- Clarity Feature Coverage ---');
+const clarityHlContent = fs.readFileSync(path.join(ZED_CLARITY_DIR, 'highlights.scm'), 'utf8');
+
+const clarityFeatureChecks = [
+  {
+    name: 'Directives: app, version, author, about, etc.',
+    ok: ['app', 'version', 'author', 'about', 'default_flags', 'config'].every(d => clarityHlContent.includes(`"${d}"`)),
+    details: 'Clarity header directives highlighted as @keyword'
+  },
+  {
+    name: 'Commands: define, uncommon, define *',
+    ok: clarityHlContent.includes('"define"') && clarityHlContent.includes('"uncommon"') && clarityHlContent.includes('"*"'),
+    details: 'Command keywords and common flags wildcard highlighted'
+  },
+  {
+    name: 'Flags: long and short flags',
+    ok: clarityHlContent.includes('(clarity_flag_long) @variable.parameter') &&
+        clarityHlContent.includes('(clarity_flag_short) @variable.parameter'),
+    details: 'Long (--flag) and short (-f) flags highlighted as @variable.parameter'
+  },
+  {
+    name: 'Params: positional parameters',
+    ok: clarityHlContent.includes('(clarity_param name: (identifier) @variable.parameter)'),
+    details: 'Parameter names highlighted as @variable.parameter'
+  },
+  {
+    name: 'Types: primitive, custom, and arrays',
+    ok: clarityHlContent.includes('(clarity_primitive_type) @type.builtin') &&
+        clarityHlContent.includes('(clarity_param type: (identifier) @type)') &&
+        clarityHlContent.includes('(clarity_flag type: (identifier) @type)') &&
+        clarityHlContent.includes('(clarity_array_type (identifier) @type)'),
+    details: 'Primitive types as @type.builtin, custom and array types as @type'
+  },
+  {
+    name: 'Enums: enum variants',
+    ok: clarityHlContent.includes('(clarity_enum_type (identifier) @variant)'),
+    details: 'Enum variants highlighted as @variant'
+  },
+  {
+    name: 'Modifiers: env, config, requires, conflicts',
+    ok: clarityHlContent.includes('env_var: (identifier) @constant') &&
+        clarityHlContent.includes('config_key:') &&
+        clarityHlContent.includes('requires: (identifier) @variable.parameter') &&
+        clarityHlContent.includes('conflicts: (identifier) @variable.parameter'),
+    details: 'env constants, config keys, and requires/conflicts dependencies highlighted'
+  },
+  {
+    name: 'Default values: identifier defaults & null',
+    ok: clarityHlContent.includes('(clarity_flag default: (identifier) @constant)') &&
+        clarityHlContent.includes('(clarity_param default: (identifier) @constant)') &&
+        clarityHlContent.includes('(null) @constant.builtin'),
+    details: 'Identifier defaults and null highlighted as constants'
+  },
+  {
+    name: 'Validators: functions and regex pattern',
+    ok: ['range', 'pattern', 'min_len', 'max_len', 'one_of', 'exists', 'parent_exists'].every(v => clarityHlContent.includes(`"${v}"`)) &&
+        clarityHlContent.includes('(clarity_validator pattern: (string) @string.regex)'),
+    details: 'Validator functions as @function and pattern regex as @string.regex'
+  },
+  {
+    name: 'Groups: or, and groups & operator ?',
+    ok: clarityHlContent.includes('"or"') && clarityHlContent.includes('"and"') &&
+        clarityHlContent.includes('(clarity_group name: (identifier) @type)') &&
+        clarityHlContent.includes('"?"'),
+    details: 'Group keywords, names, and ? operator highlighted'
+  }
+];
+
+for (const check of clarityFeatureChecks) {
+  const status = check.ok ? '[OK]  ' : '[GAP] ';
+  console.log(`${status} ${check.name.padEnd(45)} -> ${check.details}`);
+}
+
 // 3. Audit brackets and indents
 console.log('\n================ 3. BRACKETS AND INDENTS AUDIT ================');
 const bracketsContent = fs.readFileSync(path.join(ZED_LANG_DIR, 'brackets.scm'), 'utf8');
 const indentsContent = fs.readFileSync(path.join(ZED_LANG_DIR, 'indents.scm'), 'utf8');
 const configTomlContent = fs.readFileSync(path.join(ZED_LANG_DIR, 'config.toml'), 'utf8');
 
-console.log('Brackets in brackets.scm:');
+console.log('Yukino Brackets in brackets.scm:');
 console.log('  #[ ... ]    :', bracketsContent.includes('"#[" @open "]" @close'));
 console.log('  #![ ... ]   :', bracketsContent.includes('"#![" @open "]" @close'));
 console.log('  !#[ ... ]   :', bracketsContent.includes('"!#[" @open "]" @close'));
@@ -556,7 +634,7 @@ console.log('  " ... "     :', bracketsContent.includes('"\\"" @open "\\"" @clos
 console.log('  \' ... \'     :', bracketsContent.includes('"\'" @open "\'" @close'));
 console.log('  """ ... """ :', (bracketsContent.includes('\"\"\"') || bracketsContent.includes('\\"\\"\\"')) ? '[OK]' : 'GAP (multiline strings not in brackets.scm)');
 
-console.log('\nIndents in indents.scm (@indent):');
+console.log('\nYukino Indents in indents.scm (@indent):');
 const hasBraceIndent = indentsContent.includes('"{"') && indentsContent.includes('"}" @end') && indentsContent.includes('@indent');
 const hasBracketIndent = indentsContent.includes('"["') && indentsContent.includes('"]" @end') && indentsContent.includes('@indent');
 const hasParenIndent = indentsContent.includes('"("') && indentsContent.includes('")" @end') && indentsContent.includes('@indent');
@@ -567,12 +645,31 @@ console.log('  [ ... ] @end array/bracket indent       : ' + (hasBracketIndent ?
 console.log('  ( ... ) @end paren/arg indent           : ' + (hasParenIndent ? '[OK]' : '[GAP]'));
 console.log('  (switch_arm) @indent                    : ' + (hasSwitchArm ? '[OK]' : '[GAP]'));
 
+const clarityBracketsContent = fs.readFileSync(path.join(ZED_CLARITY_DIR, 'brackets.scm'), 'utf8');
+const clarityIndentsContent = fs.readFileSync(path.join(ZED_CLARITY_DIR, 'indents.scm'), 'utf8');
+
+console.log('\nClarity Brackets in brackets.scm:');
+console.log('  { ... }     :', clarityBracketsContent.includes('"{" @open "}" @close'));
+console.log('  [ ... ]     :', clarityBracketsContent.includes('"[" @open "]" @close'));
+console.log('  ( ... )     :', clarityBracketsContent.includes('"(" @open ")" @close'));
+console.log('  " ... "     :', clarityBracketsContent.includes('"\\"" @open "\\"" @close'));
+console.log('  """ ... """ :', (clarityBracketsContent.includes('\"\"\"') || clarityBracketsContent.includes('\\"\\"\\"')) ? '[OK]' : 'GAP (multiline strings not in brackets.scm)');
+
+console.log('\nClarity Indents in indents.scm (@indent):');
+const hasClarityBraceIndent = clarityIndentsContent.includes('"{"') && clarityIndentsContent.includes('"}" @end') && clarityIndentsContent.includes('@indent');
+const hasClarityBracketIndent = clarityIndentsContent.includes('"["') && clarityIndentsContent.includes('"]" @end') && clarityIndentsContent.includes('@indent');
+const hasClarityParenIndent = clarityIndentsContent.includes('"("') && clarityIndentsContent.includes('")" @end') && clarityIndentsContent.includes('@indent');
+
+console.log('  { ... } @end block/command/group indent : ' + (hasClarityBraceIndent ? '[OK]' : '[GAP]'));
+console.log('  [ ... ] @end array indent               : ' + (hasClarityBracketIndent ? '[OK]' : '[GAP]'));
+console.log('  ( ... ) @end paren/validator indent     : ' + (hasClarityParenIndent ? '[OK]' : '[GAP]'));
+
 // 4. Audit Outline and Textobjects
 console.log('\n================ 4. OUTLINE AND TEXTOBJECTS AUDIT ================');
 const outlineContent = fs.readFileSync(path.join(ZED_LANG_DIR, 'outline.scm'), 'utf8');
 const textobjectsContent = fs.readFileSync(path.join(ZED_LANG_DIR, 'textobjects.scm'), 'utf8');
 
-console.log('Outline symbols:');
+console.log('Yukino Outline symbols:');
 console.log('  function_declaration   :', outlineContent.includes('function_declaration'));
 console.log('  cfun_declaration       :', outlineContent.includes('cfun_declaration'));
 console.log('  method_declaration     :', outlineContent.includes('method_declaration'));
@@ -587,7 +684,7 @@ console.log('  alias_declaration      :', /\(alias_declaration\b/.test(outlineCo
 console.log('  macro_declaration      :', outlineContent.includes('macro_declaration'));
 console.log('  property_declaration   :', outlineContent.includes('property_declaration'));
 
-console.log('\nTextobjects:');
+console.log('\nYukino Textobjects:');
 console.log('  function_declaration @function :', textobjectsContent.includes('function_declaration'));
 console.log('  cfun_declaration @function     :', textobjectsContent.includes('cfun_declaration'));
 console.log('  lambda_expression @function    :', textobjectsContent.includes('lambda_expression'));
@@ -598,18 +695,40 @@ console.log('  struct_declaration @class      :', textobjectsContent.includes('s
 console.log('  interface_declaration @class   :', textobjectsContent.includes('interface_declaration') ? 'OK' : 'GAP (interfaces missing from @class.around/inside)');
 console.log('  enum_declaration @class        :', textobjectsContent.includes('enum_declaration') ? 'OK' : 'GAP (enums missing from @class.around/inside)');
 
+const clarityOutlineContent = fs.readFileSync(path.join(ZED_CLARITY_DIR, 'outline.scm'), 'utf8');
+const clarityTextobjectsContent = fs.readFileSync(path.join(ZED_CLARITY_DIR, 'textobjects.scm'), 'utf8');
+
+console.log('\nClarity Outline symbols:');
+console.log('  clarity_command (named)        :', clarityOutlineContent.includes('clarity_command\n  name: (identifier) @name'));
+console.log('  clarity_command (root w/ about):', clarityOutlineContent.includes('about: (string) @name'));
+console.log('  clarity_command (root bare)    :', clarityOutlineContent.includes('"define" @name'));
+console.log('  clarity_common_flags (*)       :', clarityOutlineContent.includes('clarity_common_flags\n  "*" @name'));
+console.log('  clarity_group                  :', clarityOutlineContent.includes('clarity_group\n  name: (identifier) @name'));
+
+console.log('\nClarity Textobjects:');
+console.log('  clarity_command @function      :', clarityTextobjectsContent.includes('(clarity_command) @function.around') && clarityTextobjectsContent.includes('@function.inside'));
+console.log('  clarity_common_flags @function :', clarityTextobjectsContent.includes('(clarity_common_flags) @function.around') && clarityTextobjectsContent.includes('@function.inside'));
+console.log('  clarity_group @class           :', clarityTextobjectsContent.includes('(clarity_group) @class.around') && clarityTextobjectsContent.includes('@class.inside'));
+
 // 5. Audit snippets
 console.log('\n================ 5. SNIPPETS AUDIT ================');
-const snippetsPath = path.join(ZED_DIR, 'snippets/yukino.json');
-const snippets = JSON.parse(fs.readFileSync(snippetsPath, 'utf8'));
+const snippetFiles = [
+  path.join(ZED_DIR, 'snippets/yukino.json'),
+  path.join(ZED_DIR, 'snippets/clarity.json')
+];
+let totalSnippets = 0;
 let snippetErrors = 0;
-for (const [name, s] of Object.entries(snippets)) {
-  if (!s.prefix || !s.body || !s.description) {
-    console.log(`Snippet "${name}" is missing required fields!`);
-    snippetErrors++;
+for (const sPath of snippetFiles) {
+  const snippets = JSON.parse(fs.readFileSync(sPath, 'utf8'));
+  totalSnippets += Object.keys(snippets).length;
+  for (const [name, s] of Object.entries(snippets)) {
+    if (!s.prefix || !s.body || !s.description) {
+      console.log(`Snippet "${name}" in ${path.basename(sPath)} is missing required fields!`);
+      snippetErrors++;
+    }
   }
 }
-console.log(`Audited ${Object.keys(snippets).length} snippets. Found ${snippetErrors} structural errors.`);
+console.log(`Audited ${totalSnippets} snippets across ${snippetFiles.length} files. Found ${snippetErrors} structural errors.`);
 
 // 6. Audit config.toml & extension.toml
 console.log('\n================ 6. METADATA & CONFIG AUDIT ================');
@@ -619,11 +738,18 @@ if (extToml.includes('<AUTHOR_NAME>')) console.log('  [WARN] authors contains pl
 if (extToml.includes('<USERNAME>')) console.log('  [WARN] repository contains placeholder "<USERNAME>"');
 if (extToml.includes('file:///')) console.log('  [WARN] grammars.yukino.repository is local dummy "file:///" instead of public git repo');
 
-console.log('\nconfig.toml check:');
+console.log('\nYukino config.toml check:');
 console.log('  name = Yukino         :', configTomlContent.includes('name = "Yukino"'));
 console.log('  grammar = yukino      :', configTomlContent.includes('grammar = "yukino"'));
 console.log('  path_suffixes = [ykn] :', configTomlContent.includes('path_suffixes = ["ykn"]'));
 console.log('  tab_size = 4          :', configTomlContent.includes('tab_size = 4'));
 console.log('  decrease_indent       :', configTomlContent.includes('decrease_indent_pattern'));
+
+const clarityConfigToml = fs.readFileSync(path.join(ZED_CLARITY_DIR, 'config.toml'), 'utf8');
+console.log('\nClarity config.toml check:');
+console.log('  name = Clarity        :', clarityConfigToml.includes('name = "Clarity"'));
+console.log('  grammar = yukino      :', clarityConfigToml.includes('grammar = "yukino"'));
+console.log('  path_suffixes = [cty] :', clarityConfigToml.includes('path_suffixes = ["cty"]'));
+console.log('  tab_size = 4          :', clarityConfigToml.includes('tab_size = 4'));
 
 console.log('\n================ AUDIT SUMMARY COMPLETE ================');

@@ -1,0 +1,164 @@
+{
+  "App header": {
+    "prefix": "app",
+    "body": [
+      "app \"${1:name}\"",
+      "version \"${2:0.1.0}\"",
+      "about \"${3:Description}\"",
+      "$0"
+    ],
+    "description": "Clarity app metadata header"
+  },
+  "Command definition": {
+    "prefix": "define",
+    "body": [
+      "define ${1:name} \"${2:Description}\" {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Define a CLI subcommand"
+  },
+  "Root command": {
+    "prefix": "defineroot",
+    "body": [
+      "define \"${1:Description}\" {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Define the root command (invoked when no subcommand given)"
+  },
+  "Common flags block": {
+    "prefix": "define*",
+    "body": [
+      "define * {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Define global flags shared across subcommands"
+  },
+  "Uncommon command": {
+    "prefix": "uncommon",
+    "body": [
+      "uncommon define ${1:name} \"${2:Description}\" {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Define a subcommand isolated from common flags"
+  },
+  "Flag definition": {
+    "prefix": "flag",
+    "body": [
+      "--${1:name}, -${2:s}: ${3:string} = ${4:\"default\"} \"${5:description}\";$0"
+    ],
+    "description": "Define a CLI option flag with short name and default"
+  },
+  "Long-only flag": {
+    "prefix": "flaglong",
+    "body": [
+      "--${1:name}: ${2:string} = ${3:\"default\"} \"${4:description}\";$0"
+    ],
+    "description": "Define a CLI option flag without a short option"
+  },
+  "Required flag": {
+    "prefix": "flagreq",
+    "body": [
+      "--${1:name}, -${2:s}: ${3:string} \"${4:description}\";$0"
+    ],
+    "description": "Define a required CLI option flag"
+  },
+  "Boolean flag": {
+    "prefix": "boolflag",
+    "body": [
+      "--${1:name}, -${2:s}: bool = false \"${3:description}\";$0"
+    ],
+    "description": "Define a boolean switch flag"
+  },
+  "Count flag": {
+    "prefix": "countflag",
+    "body": [
+      "--${1:verbose}, -${2:v}: count \"${3:Verbosity level}\";$0"
+    ],
+    "description": "Define a repeat counter flag"
+  },
+  "Param definition": {
+    "prefix": "param",
+    "body": [
+      "param ${1:name}: ${2:string} = ${3:\"default\"} \"${4:description}\";$0"
+    ],
+    "description": "Define a positional argument with default"
+  },
+  "Required param": {
+    "prefix": "paramreq",
+    "body": [
+      "param ${1:name}: ${2:string} \"${3:description}\";$0"
+    ],
+    "description": "Define a required positional parameter"
+  },
+  "Variadic param": {
+    "prefix": "paramvar",
+    "body": [
+      "param ${1:inputs}: ${2:string}[] \"${3:description}\";$0"
+    ],
+    "description": "Define a variadic positional parameter"
+  },
+  "Mutually exclusive group": {
+    "prefix": "or",
+    "body": [
+      "or ${1:name} ? {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Define mutually exclusive option group"
+  },
+  "Co-dependent group": {
+    "prefix": "and",
+    "body": [
+      "and ${1:name} ? {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Define co-dependent option group"
+  },
+  "Enum choice type": {
+    "prefix": "enum",
+    "body": [
+      "enum { ${1:choice1}, ${2:choice2} }$0"
+    ],
+    "description": "Define an enum choice type"
+  },
+  "Flag with env fallback": {
+    "prefix": "flagenv",
+    "body": [
+      "--${1:name}: ${2:string} env(${3:ENV_VAR}) = ${4:\"default\"} \"${5:description}\";$0"
+    ],
+    "description": "Define a flag with environment variable fallback"
+  },
+  "Flag with config fallback": {
+    "prefix": "flagcfg",
+    "body": [
+      "--${1:name}: ${2:string} config(${3:config.key}) = ${4:\"default\"} \"${5:description}\";$0"
+    ],
+    "description": "Define a flag with TOML config fallback"
+  },
+  "Validator range": {
+    "prefix": "range",
+    "body": [
+      "range(${1:1}, ${2:100})$0"
+    ],
+    "description": "Validate numeric range [min, max]"
+  },
+  "Validator pattern": {
+    "prefix": "pattern",
+    "body": [
+      "pattern(\"${1:^[a-zA-Z0-9]+$}\")$0"
+    ],
+    "description": "Validate string against regular expression"
+  },
+  "Validator one_of": {
+    "prefix": "oneof",
+    "body": [
+      "one_of(\"${1:choice1}\", \"${2:choice2}\")$0"
+    ],
+    "description": "Restrict value to listed string variants"
+  }
+}
