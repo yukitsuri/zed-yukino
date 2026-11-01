@@ -10,4 +10,4 @@ snippets = ["snippets/yukino.json", "snippets/clarity.json"]
 
 [grammars.yukino]
 repository = "https://github.com/yukitsuri/tree-sitter-yukino"
-rev = "4cd877aff77f5dda988c906152fadffb6376ff76"
+rev = "4c165beccb953a1ce83fdb79df9cb68dbbe5713f"
