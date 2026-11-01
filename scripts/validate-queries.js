@@ -726,6 +726,11 @@ for (const sPath of snippetFiles) {
       console.log(`Snippet "${name}" in ${path.basename(sPath)} is missing required fields!`);
       snippetErrors++;
     }
+    const bodyStr = Array.isArray(s.body) ? s.body.join('\n') : s.body;
+    if (/\$[^0-9{a-zA-Z_]/.test(bodyStr)) {
+      console.log(`Snippet "${name}" in ${path.basename(sPath)} has unescaped '$' token!`);
+      snippetErrors++;
+    }
   }
 }
 console.log(`Audited ${totalSnippets} snippets across ${snippetFiles.length} files. Found ${snippetErrors} structural errors.`);

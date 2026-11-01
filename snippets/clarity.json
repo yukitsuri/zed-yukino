@@ -150,7 +150,7 @@
   "Validator pattern": {
     "prefix": "pattern",
     "body": [
-      "pattern(\"${1:^[a-zA-Z0-9]+$}\")$0"
+      "pattern(\"${1:^[a-zA-Z0-9]+}\")$0"
     ],
     "description": "Validate string against regular expression"
   },
