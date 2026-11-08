@@ -16,6 +16,13 @@
   "requires"
   "conflicts"
   "error"
+  "range"
+  "pattern"
+  "min_len"
+  "max_len"
+  "one_of"
+  "exists"
+  "parent_exists"
 ] @keyword
 
 ;; Commands & Groups
@@ -47,16 +54,6 @@
 (clarity_modifier conflicts: (identifier) @variable.parameter)
 
 ;; Validators
-[
-  "range"
-  "pattern"
-  "min_len"
-  "max_len"
-  "one_of"
-  "exists"
-  "parent_exists"
-] @function
-
 (clarity_validator pattern: (string) @string.regex)
 
 ;; Literals & Constants

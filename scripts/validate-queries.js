@@ -598,10 +598,10 @@ const clarityFeatureChecks = [
     details: 'Identifier defaults and null highlighted as constants'
   },
   {
-    name: 'Validators: functions and regex pattern',
+    name: 'Validators: keywords and regex pattern',
     ok: ['range', 'pattern', 'min_len', 'max_len', 'one_of', 'exists', 'parent_exists'].every(v => clarityHlContent.includes(`"${v}"`)) &&
         clarityHlContent.includes('(clarity_validator pattern: (string) @string.regex)'),
-    details: 'Validator functions as @function and pattern regex as @string.regex'
+    details: 'Validator keywords as @keyword and pattern regex as @string.regex'
   },
   {
     name: 'Groups: or, and groups & operator ?',
