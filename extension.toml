@@ -1,0 +1,15 @@
+id = "yukino"
+name = "Yukino LSP"
+version = "0.2.0"
+schema_version = 1
+authors = ["Yukitsuri <shareui@proton.me>"]
+description = "Comprehensive language support for Yukino with LSP, syntax highlighting, and elastic auto-formatting."
+repository = "https://github.com/yukitsuri/zed-yukino"
+
+[grammars.yukino]
+repository = "file:///home/shareui/dev/yuki-lang/source/ext/tree-sitter"
+commit = "d7626ad8648c1037511117304b097a8226d6944a"
+
+[language_servers.yukino-lsp]
+name = "yukino-lsp"
+languages = ["Yukino"]
