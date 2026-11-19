@@ -7,8 +7,8 @@ description = "Comprehensive language support for Yukino with LSP, syntax highli
 repository = "https://github.com/yukitsuri/zed-yukino"
 
 [grammars.yukino]
-repository = "file:///home/shareui/dev/yuki-lang/source/ext/tree-sitter"
-commit = "d7626ad8648c1037511117304b097a8226d6944a"
+repository = "https://github.com/yukitsuri/tree-sitter-yukino"
+rev = "d3735539f7cab66a6deb1893288c2f9cba25f0fb"
 
 [language_servers.yukino-lsp]
 name = "yukino-lsp"
