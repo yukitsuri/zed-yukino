@@ -8,7 +8,7 @@ repository = "https://github.com/yukitsuri/zed-yukino"
 
 [grammars.yukino]
 repository = "https://github.com/yukitsuri/tree-sitter-yukino"
-rev = "67068427f45e97c72d06c9eeae82277efc2fdf60"
+rev = "00f7c05d39f1ea1fefb76d45c58a9d450ce85ab3"
 
 [language_servers.yukino-lsp]
 name = "yukino-lsp"
