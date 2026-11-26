@@ -1,6 +1,6 @@
 id = "yukino"
 name = "Yukino LSP"
-version = "0.2.0"
+version = "0.1.1"
 schema_version = 1
 authors = ["Yukitsuri <shareui@proton.me>"]
 description = "Comprehensive language support for Yukino with LSP, syntax highlighting, and elastic auto-formatting."
@@ -8,7 +8,7 @@ repository = "https://github.com/yukitsuri/zed-yukino"
 
 [grammars.yukino]
 repository = "https://github.com/yukitsuri/tree-sitter-yukino"
-rev = "d3735539f7cab66a6deb1893288c2f9cba25f0fb"
+rev = "67068427f45e97c72d06c9eeae82277efc2fdf60"
 
 [language_servers.yukino-lsp]
 name = "yukino-lsp"

@@ -1,8 +1,17 @@
+(namespace_declaration
+  name: (namespace_path) @name) @item
+
 (function_declaration
   name: (identifier) @name) @item
 
 (cfun_declaration
   name: (identifier) @name) @item
+
+(cvar_declaration
+  name: (identifier) @name) @item
+
+(cload_statement
+  path: (string) @name) @item
 
 (method_declaration
   name: (identifier) @name) @item

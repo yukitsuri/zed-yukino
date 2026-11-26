@@ -20,6 +20,27 @@ impl zed::Extension for YukinoExtension {
             env: Default::default(),
         })
     }
+
+    fn label_for_completion(
+        &self,
+        _language_server_id: &LanguageServerId,
+        completion: zed::lsp::Completion,
+    ) -> Option<zed::CodeLabel> {
+        if matches!(completion.kind, Some(zed::lsp::CompletionKind::File))
+            && completion.detail.as_deref() == Some("C header")
+        {
+            let filter_end = completion.label.len();
+            return Some(zed::CodeLabel {
+                code: format!("cload \"{}\"", completion.label),
+                spans: vec![zed::CodeLabelSpan::literal(
+                    completion.label,
+                    Some("string".to_string()),
+                )],
+                filter_range: (0..filter_end).into(),
+            });
+        }
+        None
+    }
 }
 
 zed::register_extension!(YukinoExtension);

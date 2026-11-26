@@ -1,6 +1,6 @@
 name = "Yukino"
 grammar = "yukino"
-path_suffixes = ["ykn"]
+path_suffixes = ["ykn", "ykni"]
 line_comments = ["// ", "//", "/// "]
 block_comment = ["/*", "*/"]
 word_characters = ["_"]

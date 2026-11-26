@@ -6,6 +6,7 @@
   "locked"
   "struct"
   "cstruct"
+  "cunion"
   "interface"
   "enum"
   "type"
@@ -18,13 +19,16 @@
 
 [
   "load"
+  "cload"
   "public"
+  "namespace"
 ] @keyword.control.import
 
 [
   "set"
   "rewrite"
   "static"
+  "cvar"
 ] @keyword.storage
 
 [
@@ -155,6 +159,7 @@
 (cfun_declaration return_type: (user_type (identifier) @type))
 
 ; Module and Import paths as Types (placed after base identifier so they override to @type)
+(namespace_path (identifier) @type)
 (import_path (identifier) @type)
 (import_path prefix: (identifier) @type)
 (import_path (import_segment (import_pattern (identifier) @type)))
@@ -203,7 +208,7 @@
 ; Strings
 (string_content) @string
 (escape_sequence) @string.escape
-(string ["\""] @string)
+(string ["\"" "\"\"\""] @string)
 
 ; String Interpolation (placed after brackets so ${ and } both get @punctuation.special)
 (interpolation
